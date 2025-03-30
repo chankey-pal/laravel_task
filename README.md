@@ -36,3 +36,12 @@ Task Manager is a Laravel-based web application designed to help users manage ta
 
 ### 📜 License  
 This project is open-source and available under the MIT License.  
+
+### Setup
+Create database with name (laravel)
+Then Run Migration Command
+(If YOu Want Run It In local Host xamp Run Command php Artisan serve IN Terminal)
+ Then Create .env file
+ Then register and Login 
+ It Will Run
+
