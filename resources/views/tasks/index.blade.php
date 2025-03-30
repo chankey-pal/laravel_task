@@ -1,33 +1,39 @@
-@extends('layouts.app')
-
-@section('content')
+@extends('layouts.app') @section('content')
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="fw-bold text-primary">Task List</h3>
+        <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="This functionality will work later.">
+            <i class="bi bi-envelope"></i> Send Mail
+        </button>
         <a href="{{ route('tasks.create') }}" class="btn btn-success"><i class="bi bi-plus-lg"></i> Add Task</a>
     </div>
 
     @if (session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
-    {{-- Filter Dropdown --}}
+    <div class="alert alert-success">{{ session('success') }}</div>
+    @endif {{-- Filter Dropdown --}}
     <div class="row mb-3">
         <div class="col-md-4">
             <form method="GET" action="{{ route('tasks.index') }}">
-                <label for="status" class="form-label fw-bold">Filter by Status:</label>
-                <select name="status" id="status" class="form-select" onchange="this.form.submit()">
-                    <option value="">All</option>
-                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
-                </select>
+                <label for="status" class="form-label fw-bold">
+                    <i class="bi bi-funnel me-1"></i> Filter by Status:
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-funnel"></i>
+                    </span>
+                    <select name="status" id="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">All</option>
+                        <option value="pending" {{ request( 'status')=='pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="in_progress" {{ request( 'status')=='in_progress' ? 'selected' : '' }}>In Progress</option>
+                        <option value="completed" {{ request( 'status')=='completed' ? 'selected' : '' }}>Completed</option>
+                    </select>
+                </div>
             </form>
         </div>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover table-bordered" id="task-table">
+        <table class="table table-hover table-bordered shadow-sm mt-3" id="task-table">
             <thead class="table-dark">
                 <tr>
                     <th>#</th>
@@ -39,31 +45,49 @@
                 </tr>
             </thead>
             <tbody id="task-list">
-                {{-- Initial set of tasks --}}
                 @foreach ($tasks as $index => $task)
-                    <tr id="task-row-{{ $task->id }}" class="task-row">
-                        <td class="fw-bold">{{ $index + 1 }}</td>
-                        <td>{{ $task->title }}</td>
-                        <td>
-                            <div class="ql-editor">{!! $task->description !!}</div>
-                        </td>
-                        <td>{{ \Carbon\Carbon::parse($task->due_date)->format('d M Y') }}</td>
-                        <td>
-                            <select class="form-select status-change" data-task-id="{{ $task->id }}">
-                                <option value="pending" {{ $task->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="in_progress" {{ $task->status == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                                <option value="completed" {{ $task->status == 'completed' ? 'selected' : '' }}>Completed</option>
-                            </select>
-                        </td>
-                        <td class="text-center">
-                            <a href="{{ route('tasks.edit', $task->id) }}" class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i> Edit</a>
-                            <button class="btn btn-danger btn-sm delete-task" data-task-id="{{ $task->id }}"><i class="bi bi-trash"></i> Delete</button>
-                        </td>
-                    </tr>
+                @php
+                    $dueDate = \Carbon\Carbon::parse($task->due_date);
+                    $now = \Carbon\Carbon::now();
+                    $diffInHours = $now->diffInHours($dueDate, false);
+                @endphp
+                <tr id="task-row-{{ $task->id }}" class="task-row align-middle">
+                    <td class="fw-bold">{{ $index + 1 }}</td>
+                    <td>{{ $task->title }}</td>
+                    <td>
+                        <div class="ql-editor">{!! Str::limit($task->description, 50) !!}</div>
+                    </td>
+                    <td>
+                        {{ $dueDate->format('d M Y, H:i A') }}
+                        @if ($diffInHours >= 0 && $diffInHours <= 4 && $task->status !== 'completed')
+                            <span class="badge bg-warning ms-2">
+                                <i class="bi bi-bell"></i> Due in {{ $diffInHours }}h
+                            </span>
+                        @endif
+                    </td>
+                    <td>
+                        <select class="form-select status-change" data-task-id="{{ $task->id }}">
+                            <option value="pending" {{ $task->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="in_progress" {{ $task->status == 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                            <option value="completed" {{ $task->status == 'completed' ? 'selected' : '' }}>Completed</option>
+                        </select>
+                    </td>
+                    <td class="text-center">
+                        <a href="{{ route('tasks.edit', $task->id) }}" class="btn btn-warning btn-sm" data-bs-toggle="tooltip" title="Edit Task">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button class="btn btn-danger btn-sm delete-task" data-task-id="{{ $task->id }}" data-bs-toggle="tooltip" title="Delete Task">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
                 @endforeach
             </tbody>
+            
+            
         </table>
     </div>
+
 
     {{-- Loader --}}
     <div id="loader" class="text-center" style="display: none;">
@@ -124,8 +148,8 @@
                                         </select>
                                     </td>
                                     <td class="text-center">
-                                        <a href="/tasks/${task.id}/edit" class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i> Edit</a>
-                                        <button class="btn btn-danger btn-sm delete-task" data-task-id="${task.id}"><i class="bi bi-trash"></i> Delete</button>
+                                        <a href="/tasks/${task.id}/edit" class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i> </a>
+                                        <button class="btn btn-danger btn-sm delete-task" data-task-id="${task.id}"><i class="bi bi-trash"></i> </button>
                                     </td>
                                 </tr>
                             `;
@@ -191,4 +215,13 @@
         });
     });
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+
 @endsection

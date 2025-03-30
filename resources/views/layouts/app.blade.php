@@ -23,7 +23,8 @@
     <!-- Quill Styles -->
     <link href="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.snow.css" rel="stylesheet" />
 
-  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+
     <style>
         * {
             font-family: 'Poppins', sans-serif;
@@ -256,15 +257,35 @@
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
             <a class="navbar-brand" href="#">Task Manager</a>
-            <div class="collapse navbar-collapse">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    @auth
                     <li class="nav-item">
-                        <span class="greeting" id="greeting"></span>
+                        <span class="nav-link" style="color: white;">Welcome, {{ auth()->user()->name }}!</span>
                     </li>
+                    
+                        <li class="nav-item">
+                            <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-danger">Logout</button>
+                            </form>
+                        </li>
+                    @else
+                        <li class="nav-item">
+                            <a href="{{ route('login') }}" class="btn btn-primary">Login</a>
+                            <a href="{{ route('register') }}" class="btn btn-secondary">Register</a>
+                        </li>
+                    @endauth
                 </ul>
             </div>
         </div>
     </nav>
+    
+    
 
     <!-- Main Content -->
     <div class="container main-container">
@@ -318,6 +339,7 @@
             
         });
     </script>
+    
 </body>
 </html>
 
